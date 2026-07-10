@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#07152f">
+  <title>GeoQuest Leaderboard | DCG10263 Basic Surveying</title>
+  <meta name="description" content="A gamified leaderboard for DCG10263 Basic Surveying.">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="ambient ambient-one"></div>
+  <div class="ambient ambient-two"></div>
+
+  <main class="app-shell">
+    <header class="hero panel">
+      <div class="hero-content">
+        <div class="course-flag"><span class="signal"></span><span>Diploma in Geomatics</span><i>Academic Mission Control</i></div>
+        <p class="eyebrow">DCG10263 · BASIC SURVEYING</p>
+        <h1>GeoQuest <span>Leaderboard</span></h1>
+        <p class="hero-copy">Precision in every measurement. Progress in every mission.</p>
+        <div class="hero-tags" aria-label="Course topics"><span>Field Survey</span><span>Geospatial Data</span><span>Traverse Control</span></div>
+      </div>
+      <div class="hero-mark" aria-hidden="true">
+        <div class="instrument-label">STATION GQ-01</div>
+        <div class="orbit"><div class="crosshair"></div><div class="pin">⌖</div></div>
+        <div class="coordinates">N 03°08′ · E 101°41′</div>
+      </div>
+    </header>
+
+    <div class="telemetry" aria-hidden="true"><span>GRID: RSO MALAYA</span><span>DATUM: GDM2000</span><span>STATUS: <b>ONLINE</b></span><span>PRECISION: ±0.003M</span></div>
+
+    <section class="stats-grid" aria-label="Class summary">
+      <article class="stat-card panel"><span class="stat-index">01</span><span class="stat-icon">◉</span><div><p>Active Surveyors</p><strong id="studentCount">0</strong><small>field cohort</small></div></article>
+      <article class="stat-card panel"><span class="stat-index">02</span><span class="stat-icon">◆</span><div><p>Class Average</p><strong id="classAverage">0%</strong><small>overall accuracy</small></div></article>
+      <article class="stat-card panel"><span class="stat-index">03</span><span class="stat-icon">▲</span><div><p>Highest Fix</p><strong id="topScore">0</strong><small>top performance</small></div></article>
+      <article class="stat-card panel"><span class="stat-index">04</span><span class="stat-icon">⬡</span><div><p>Mission Modules</p><strong>5</strong><small>course topics</small></div></article>
+    </section>
+
+    <section class="panel score-entry">
+      <div class="section-heading">
+        <div><p class="eyebrow">SCORE TERMINAL</p><h2>Add or update a surveyor</h2></div>
+        <button class="ghost-btn" id="resetData" type="button">Reset sample data</button>
+      </div>
+      <form id="scoreForm">
+        <div class="form-grid">
+          <label class="field student-field"><span>Student name</span><input id="studentName" type="text" placeholder="Enter full name" required maxlength="40" autocomplete="off"></label>
+          <label class="field"><span>Introduction to Surveying</span><input class="score-input" id="topic1" type="number" min="0" max="20" value="0" required><small>/ 20</small></label>
+          <label class="field"><span>Survey Equipment</span><input class="score-input" id="topic2" type="number" min="0" max="20" value="0" required><small>/ 20</small></label>
+          <label class="field"><span>Datum and Coordinates</span><input class="score-input" id="topic3" type="number" min="0" max="20" value="0" required><small>/ 20</small></label>
+          <label class="field"><span>Traverse</span><input class="score-input" id="topic4" type="number" min="0" max="20" value="0" required><small>/ 20</small></label>
+          <label class="field"><span>Land and Survey Agencies</span><input class="score-input" id="topic5" type="number" min="0" max="20" value="0" required><small>/ 20</small></label>
+        </div>
+        <div class="form-footer">
+          <div class="live-total"><span>Projected total</span><strong><span id="previewTotal">0</span> / 100</strong><div class="mini-track"><i id="previewBar"></i></div></div>
+          <button class="primary-btn" id="submitButton" type="submit">＋ Add to leaderboard</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="leaderboard-section panel">
+      <div class="section-heading board-tools">
+        <div><p class="eyebrow">LIVE STANDINGS</p><h2>Surveyor rankings</h2><p class="section-note">Select <strong>Edit</strong> on any row to change the student's name or scores directly.</p></div>
+        <div class="controls">
+          <label class="search"><span aria-hidden="true">⌕</span><input id="searchInput" type="search" placeholder="Search student" aria-label="Search student"></label>
+          <label class="switch"><input id="topTenToggle" type="checkbox"><span></span> Top 10 only</label>
+        </div>
+      </div>
+
+      <div id="podium" class="podium" aria-label="Top three students"></div>
+
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Rank</th><th>Surveyor</th><th title="Introduction to Surveying">Intro</th><th title="Survey Equipment">Equipment</th><th title="Datum and Coordinates">Datum</th><th title="Traverse">Traverse</th><th title="Land and Survey Agencies">Agencies</th><th>Progress</th><th>Total</th><th>Badge</th><th>Actions</th></tr></thead>
+          <tbody id="leaderboardBody"></tbody>
+        </table>
+        <p id="emptyState" class="empty-state" hidden>No surveyors match your search.</p>
+      </div>
+    </section>
+
+    <section class="badge-guide panel">
+      <div><p class="eyebrow">ACHIEVEMENTS</p><h2>Badge system</h2></div>
+      <div class="badge-list">
+        <div><span class="badge badge-legend">◆</span><p><strong>Legend</strong><small>90–100%</small></p></div>
+        <div><span class="badge badge-master">★</span><p><strong>Master</strong><small>80–89%</small></p></div>
+        <div><span class="badge badge-pathfinder">▲</span><p><strong>Pathfinder</strong><small>70–79%</small></p></div>
+        <div><span class="badge badge-explorer">●</span><p><strong>Explorer</strong><small>50–69%</small></p></div>
+        <div><span class="badge badge-rookie">⬡</span><p><strong>Rookie</strong><small>Below 50%</small></p></div>
+      </div>
+    </section>
+
+    <footer><p>GeoQuest · DCG10263 Basic Surveying</p><span>Scores are saved on this device</span></footer>
+  </main>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script src="script.js"></script>
+</body>
+</html>
