@@ -8,7 +8,7 @@
   <meta name="description" content="A gamified leaderboard for DCG10263 Basic Surveying.">
   <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body data-page="student">
   <div class="ambient ambient-one"></div>
   <div class="ambient ambient-two"></div>
 
@@ -37,30 +37,9 @@
       <article class="stat-card panel"><span class="stat-index">04</span><span class="stat-icon">⬡</span><div><p>Mission Modules</p><strong>5</strong><small>course topics</small></div></article>
     </section>
 
-    <section class="panel score-entry">
-      <div class="section-heading">
-        <div><p class="eyebrow">SCORE TERMINAL</p><h2>Update student score</h2></div>
-        <button class="ghost-btn" id="resetData" type="button">Reset scores</button>
-      </div>
-      <form id="scoreForm">
-        <div class="form-grid">
-          <label class="field student-field"><span>Student name</span><select id="studentName" required><option value="">Select a student</option></select></label>
-          <label class="field"><span>Introduction to Surveying</span><input class="score-input" id="topic1" type="number" min="0" max="20" value="0" required><small>/ 20</small></label>
-          <label class="field"><span>Survey Equipment</span><input class="score-input" id="topic2" type="number" min="0" max="20" value="0" required><small>/ 20</small></label>
-          <label class="field"><span>Datum and Coordinates</span><input class="score-input" id="topic3" type="number" min="0" max="20" value="0" required><small>/ 20</small></label>
-          <label class="field"><span>Traverse</span><input class="score-input" id="topic4" type="number" min="0" max="20" value="0" required><small>/ 20</small></label>
-          <label class="field"><span>Land and Survey Agencies</span><input class="score-input" id="topic5" type="number" min="0" max="20" value="0" required><small>/ 20</small></label>
-        </div>
-        <div class="form-footer">
-          <div class="live-total"><span>Projected total</span><strong><span id="previewTotal">0</span> / 100</strong><div class="mini-track"><i id="previewBar"></i></div></div>
-          <button class="primary-btn" id="submitButton" type="submit">＋ Add to leaderboard</button>
-        </div>
-      </form>
-    </section>
-
     <section class="leaderboard-section panel">
       <div class="section-heading board-tools">
-        <div><p class="eyebrow">LIVE STANDINGS</p><h2>Surveyor rankings</h2><p class="section-note">Select <strong>Edit</strong> on any row to change the student's name or scores directly.</p></div>
+        <div><p class="eyebrow">LIVE STANDINGS</p><h2>Surveyor rankings</h2><p class="section-note">DCG10263 Basic Surveying · DGU1B</p></div>
         <div class="controls">
           <label class="search"><span aria-hidden="true">⌕</span><input id="searchInput" type="search" placeholder="Search student" aria-label="Search student"></label>
           <label class="switch"><input id="topTenToggle" type="checkbox"><span></span> Top 10 only</label>
@@ -71,7 +50,7 @@
 
       <div class="table-wrap">
         <table>
-          <thead><tr><th>Rank</th><th>Surveyor</th><th title="Introduction to Surveying">Intro</th><th title="Survey Equipment">Equipment</th><th title="Datum and Coordinates">Datum</th><th title="Traverse">Traverse</th><th title="Land and Survey Agencies">Agencies</th><th>Progress</th><th>Total</th><th>Badge</th><th>Actions</th></tr></thead>
+          <thead><tr><th>Rank</th><th>Surveyor</th><th title="Introduction to Surveying">Intro</th><th title="Survey Equipment">Equipment</th><th title="Datum and Coordinates">Datum</th><th title="Traverse">Traverse</th><th title="Land and Survey Agencies">Agencies</th><th>Progress</th><th>Total</th><th>Badge</th></tr></thead>
           <tbody id="leaderboardBody"></tbody>
         </table>
         <p id="emptyState" class="empty-state" hidden>No surveyors match your search.</p>

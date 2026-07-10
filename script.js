@@ -1,5 +1,7 @@
 const TOPICS = ["topic1", "topic2", "topic3", "topic4", "topic5"];
 const STORAGE_KEY = "geoquest-dcg10263-dgu1b-roster-v1";
+const ADMIN_SESSION_KEY = "geoquest-lecturer-auth";
+const LECTURER_PIN = "10263";
 
 const sampleStudents = [
   { id: "16DGU26F1001", name: "MUHAMMAD UMAR AZ-ZUHDI BIN MOHD AKHIR", className: "DGU1B", scores: [0, 0, 0, 0, 0] },
@@ -35,33 +37,36 @@ const sampleStudents = [
 ];
 
 let students = loadStudents();
-let editingId = null;
-let inlineEditingId = null;
-
-const form = document.querySelector("#scoreForm");
+const pageType = document.body.dataset.page;
 const body = document.querySelector("#leaderboardBody");
 const searchInput = document.querySelector("#searchInput");
-const topTenToggle = document.querySelector("#topTenToggle");
 
 function loadStudents() {
   try {
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
-    return Array.isArray(saved) && saved.length ? saved : structuredClone(sampleStudents);
+    if (!Array.isArray(saved)) return structuredClone(sampleStudents);
+    return sampleStudents.map(rosterStudent => {
+      const savedStudent = saved.find(student => String(student.id) === rosterStudent.id);
+      return savedStudent ? { ...rosterStudent, scores: normalizeScores(savedStudent.scores) } : structuredClone(rosterStudent);
+    });
   } catch { return structuredClone(sampleStudents); }
 }
 
-function saveStudents() { localStorage.setItem(STORAGE_KEY, JSON.stringify(students)); }
+function normalizeScores(scores) {
+  return Array.from({ length: 5 }, (_, index) => Math.max(0, Math.min(20, Number(scores?.[index]) || 0)));
+}
+
+function saveStudents() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(students));
+}
+
 const totalOf = student => student.scores.reduce((sum, score) => sum + Number(score), 0);
 const initials = name => name.split(/\s+/).slice(0, 2).map(word => word[0]).join("").toUpperCase();
 
-function syncStudentOptions() {
-  const select = document.querySelector("#studentName");
-  const selectedId = select.value;
-  select.innerHTML = `<option value="">Select a student</option>${[...students]
-    .sort((a, b) => String(a.id).localeCompare(String(b.id)))
-    .map(student => `<option value="${escapeHtml(String(student.id))}">${escapeHtml(String(student.id))} — ${escapeHtml(student.name)}</option>`)
-    .join("")}`;
-  if (students.some(student => String(student.id) === selectedId)) select.value = selectedId;
+function escapeHtml(value) {
+  const element = document.createElement("div");
+  element.textContent = value;
+  return element.innerHTML;
 }
 
 function badgeFor(total) {
@@ -76,46 +81,126 @@ function rankedStudents() {
   return [...students].sort((a, b) => totalOf(b) - totalOf(a) || a.name.localeCompare(b.name));
 }
 
-function render() {
-  syncStudentOptions();
+function renderLeaderboard() {
+  if (!body) return;
   const ranked = rankedStudents();
-  const query = searchInput.value.trim().toLowerCase();
+  const query = searchInput?.value.trim().toLowerCase() || "";
   let visible = ranked.map((student, index) => ({ ...student, rank: index + 1 }));
-  if (topTenToggle.checked) visible = visible.slice(0, 10);
-  if (query) visible = visible.filter(student => student.name.toLowerCase().includes(query));
+  const topTenToggle = document.querySelector("#topTenToggle");
+  if (topTenToggle?.checked) visible = visible.slice(0, 10);
+  if (query) visible = visible.filter(student => student.name.toLowerCase().includes(query) || student.id.toLowerCase().includes(query));
 
   body.innerHTML = visible.map(student => {
     const total = totalOf(student);
     const badge = badgeFor(total);
-    const isEditing = String(student.id) === String(inlineEditingId);
-    if (isEditing) return `<tr class="editing-row">
-      <td><span class="rank">#${student.rank}</span></td>
-      <td><div class="student-cell editing-student"><span class="avatar table-avatar">${initials(student.name)}</span><div><strong>${escapeHtml(student.name)}</strong><small>${escapeHtml(String(student.id))} · DGU1B</small></div></div></td>
-      ${student.scores.map((score, index) => `<td><label class="inline-field score-edit"><span class="sr-only">Topic ${index + 1} score</span><input class="inline-score" type="number" value="${score}" min="0" max="20" aria-label="Topic ${index + 1} score"><small>/20</small></label></td>`).join("")}
-      <td class="edit-guidance" colspan="3"><strong>Edit mode</strong><small>Scores must be between 0 and 20.</small></td>
-      <td class="row-actions"><button class="row-btn save-row" data-save="${student.id}">Save</button><button class="row-btn cancel-row" data-cancel="${student.id}">Cancel</button></td>
-    </tr>`;
     return `<tr>
       <td><span class="rank">#${student.rank}</span></td>
-      <td><div class="student-cell"><span class="avatar table-avatar">${initials(student.name)}</span><div><strong>${escapeHtml(student.name)}</strong><small>${escapeHtml(String(student.id))} · ${escapeHtml(student.className || "DGU1B")}</small></div></div></td>
+      <td><div class="student-cell"><span class="avatar table-avatar">${initials(student.name)}</span><div><strong>${escapeHtml(student.name)}</strong><small>${escapeHtml(student.id)} · DGU1B</small></div></div></td>
       ${student.scores.map(score => `<td>${score}</td>`).join("")}
-      <td class="progress-cell"><div class="progress-label"><span>Completion</span><span>${total}%</span></div><div class="progress-track"><i style="width:${total}%"></i></div></td>
+      <td class="progress-cell"><div class="progress-label"><span>Progress</span><span>${total}%</span></div><div class="progress-track"><i style="width:${total}%"></i></div></td>
       <td class="total-cell"><strong>${total}</strong><small>${total}%</small></td>
       <td><span class="badge badge-${badge.className}">${badge.icon}</span><span class="badge-name">${badge.name}</span></td>
-      <td class="row-actions"><button class="row-btn edit-row" data-edit="${student.id}" aria-label="Edit ${escapeHtml(student.name)}">Edit</button><button class="row-btn delete-row" data-delete="${student.id}" aria-label="Delete ${escapeHtml(student.name)}">Delete</button></td>
     </tr>`;
   }).join("");
 
   document.querySelector("#emptyState").hidden = visible.length > 0;
-  document.querySelector("#studentCount").textContent = students.length;
-  const totals = students.map(totalOf);
-  document.querySelector("#classAverage").textContent = `${totals.length ? Math.round(totals.reduce((a,b)=>a+b,0)/totals.length) : 0}%`;
-  document.querySelector("#topScore").textContent = totals.length ? Math.max(...totals) : 0;
+  updateStats();
   renderPodium(ranked.slice(0, 3));
 }
 
+function updateStats() {
+  const totals = students.map(totalOf);
+  const count = document.querySelector("#studentCount");
+  const average = document.querySelector("#classAverage");
+  const top = document.querySelector("#topScore");
+  if (count) count.textContent = students.length;
+  if (average) average.textContent = `${totals.length ? Math.round(totals.reduce((a, b) => a + b, 0) / totals.length) : 0}%`;
+  if (top) top.textContent = totals.length ? Math.max(...totals) : 0;
+}
+
 function renderPodium(top) {
-  document.querySelector("#podium").innerHTML = top.map((student, index) => `<article class="podium-card"><span class="podium-rank">${["①","②","③"][index]}</span><span class="avatar">${initials(student.name)}</span><div class="podium-info"><strong>${escapeHtml(student.name)}</strong><small>${badgeFor(totalOf(student)).name}</small></div><span class="podium-score">${totalOf(student)}</span></article>`).join("");
+  const podium = document.querySelector("#podium");
+  if (!podium) return;
+  podium.innerHTML = top.map((student, index) => `<article class="podium-card"><span class="podium-rank">${["①", "②", "③"][index]}</span><span class="avatar">${initials(student.name)}</span><div class="podium-info"><strong>${escapeHtml(student.name)}</strong><small>${badgeFor(totalOf(student)).name}</small></div><span class="podium-score">${totalOf(student)}</span></article>`).join("");
+}
+
+function showToast(message) {
+  const toast = document.querySelector("#toast");
+  if (!toast) return;
+  toast.textContent = message;
+  toast.classList.add("show");
+  clearTimeout(showToast.timer);
+  showToast.timer = setTimeout(() => toast.classList.remove("show"), 2600);
+}
+
+function initializeStudentPage() {
+  renderLeaderboard();
+  searchInput?.addEventListener("input", renderLeaderboard);
+  document.querySelector("#topTenToggle")?.addEventListener("change", renderLeaderboard);
+  window.addEventListener("storage", event => {
+    if (event.key === STORAGE_KEY) { students = loadStudents(); renderLeaderboard(); }
+  });
+}
+
+function initializeAdminPage() {
+  const pinGate = document.querySelector("#pinGate");
+  const adminApp = document.querySelector("#adminApp");
+  const pinForm = document.querySelector("#pinForm");
+  const pinInput = document.querySelector("#pinInput");
+  const pinError = document.querySelector("#pinError");
+
+  function unlockAdmin() {
+    document.body.classList.remove("locked");
+    pinGate.hidden = true;
+    adminApp.setAttribute("aria-hidden", "false");
+    syncStudentOptions();
+    renderLeaderboard();
+    updatePreview();
+  }
+
+  if (sessionStorage.getItem(ADMIN_SESSION_KEY) === "authorized") unlockAdmin();
+
+  pinForm.addEventListener("submit", event => {
+    event.preventDefault();
+    if (pinInput.value !== LECTURER_PIN) {
+      pinError.textContent = "Incorrect PIN. Access denied.";
+      pinInput.value = "";
+      pinInput.focus();
+      return;
+    }
+    sessionStorage.setItem(ADMIN_SESSION_KEY, "authorized");
+    pinError.textContent = "";
+    unlockAdmin();
+  });
+
+  document.querySelector("#logoutButton").addEventListener("click", () => {
+    sessionStorage.removeItem(ADMIN_SESSION_KEY);
+    document.body.classList.add("locked");
+    pinGate.hidden = false;
+    adminApp.setAttribute("aria-hidden", "true");
+    pinInput.value = "";
+    pinInput.focus();
+  });
+
+  document.querySelector("#studentName").addEventListener("change", loadSelectedScores);
+  TOPICS.forEach(id => document.querySelector(`#${id}`).addEventListener("input", updatePreview));
+  document.querySelector("#scoreForm").addEventListener("submit", updateSelectedScore);
+  document.querySelector("#resetSelected").addEventListener("click", resetSelectedScore);
+  document.querySelector("#resetAll").addEventListener("click", resetAllScores);
+  searchInput.addEventListener("input", renderLeaderboard);
+}
+
+function syncStudentOptions() {
+  const select = document.querySelector("#studentName");
+  const selectedId = select.value;
+  select.innerHTML = `<option value="">Select a student</option>${sampleStudents.map(student => `<option value="${student.id}">${student.id} — ${escapeHtml(student.name)}</option>`).join("")}`;
+  if (students.some(student => student.id === selectedId)) select.value = selectedId;
+}
+
+function loadSelectedScores(event) {
+  const student = students.find(item => item.id === event.target.value);
+  TOPICS.forEach((id, index) => document.querySelector(`#${id}`).value = student ? student.scores[index] : 0);
+  updatePreview();
 }
 
 function updatePreview() {
@@ -124,82 +209,40 @@ function updatePreview() {
   document.querySelector("#previewBar").style.width = `${Math.min(total, 100)}%`;
 }
 
-form.addEventListener("submit", event => {
+function updateSelectedScore(event) {
   event.preventDefault();
   const studentId = document.querySelector("#studentName").value;
   const scores = TOPICS.map(id => Number(document.querySelector(`#${id}`).value));
   if (!studentId) return showToast("Select a student first.");
-  if (scores.some(score => score < 0 || score > 20 || !Number.isFinite(score))) return showToast("Enter scores from 0 to 20.");
-  const student = students.find(item => String(item.id) === studentId);
-  if (!student) return showToast("The selected student could not be found.");
+  if (scores.some(score => !Number.isFinite(score) || score < 0 || score > 20)) return showToast("Each score must be between 0 and 20.");
+  const student = students.find(item => item.id === studentId);
   student.scores = scores;
-  showToast(`${student.name}'s score was updated.`);
-  saveStudents(); resetForm(); render();
-});
-
-body.addEventListener("click", event => {
-  const editButton = event.target.closest("[data-edit]");
-  const saveButton = event.target.closest("[data-save]");
-  const cancelButton = event.target.closest("[data-cancel]");
-  const deleteButton = event.target.closest("[data-delete]");
-  if (editButton) {
-    inlineEditingId = editButton.dataset.edit;
-    render();
-    body.querySelector(".inline-score")?.focus();
-  }
-  if (saveButton) {
-    const id = saveButton.dataset.save;
-    const row = saveButton.closest("tr");
-    const scores = [...row.querySelectorAll(".inline-score")].map(input => Number(input.value));
-    if (scores.some(score => !Number.isFinite(score) || score < 0 || score > 20)) return showToast("Each score must be between 0 and 20.");
-    const student = students.find(item => String(item.id) === id);
-    if (student) student.scores = scores;
-    inlineEditingId = null;
-    saveStudents(); render(); showToast(`${student.name}'s scores were saved.`);
-  }
-  if (cancelButton) {
-    inlineEditingId = null;
-    render();
-  }
-  if (deleteButton) {
-    const id = deleteButton.dataset.delete;
-    const student = students.find(item => String(item.id) === id);
-    if (student && confirm(`Remove ${student.name} from the leaderboard?`)) {
-      inlineEditingId = null;
-      students = students.filter(item => String(item.id) !== id); saveStudents(); render(); showToast("Surveyor removed.");
-    }
-  }
-});
-
-function resetForm() {
-  form.reset(); editingId = null;
-  TOPICS.forEach(id => document.querySelector(`#${id}`).value = 0);
-  document.querySelector("#submitButton").textContent = "＋ Add to leaderboard";
-  updatePreview();
+  saveStudents();
+  renderLeaderboard();
+  showToast(`${student.name}'s scores were updated.`);
 }
 
-document.querySelector("#resetData").addEventListener("click", () => {
-  if (!confirm("Reset all five topic scores to zero for every student?")) return;
+function resetSelectedScore() {
+  const studentId = document.querySelector("#studentName").value;
+  if (!studentId) return showToast("Select a student first.");
+  const student = students.find(item => item.id === studentId);
+  if (!confirm(`Reset all five scores for ${student.name}?`)) return;
+  student.scores = [0, 0, 0, 0, 0];
+  saveStudents();
+  loadSelectedScores({ target: { value: studentId } });
+  renderLeaderboard();
+  showToast(`${student.name}'s scores were reset.`);
+}
+
+function resetAllScores() {
+  if (!confirm("Reset Topic 1–5 scores to zero for all 30 students?")) return;
   students = students.map(student => ({ ...student, scores: [0, 0, 0, 0, 0] }));
-  saveStudents(); resetForm(); render(); showToast("All student scores were reset to zero.");
-});
+  saveStudents();
+  const selectedId = document.querySelector("#studentName").value;
+  loadSelectedScores({ target: { value: selectedId } });
+  renderLeaderboard();
+  showToast("All student scores were reset to zero.");
+}
 
-document.querySelector("#studentName").addEventListener("change", event => {
-  const student = students.find(item => String(item.id) === event.target.value);
-  TOPICS.forEach((id, index) => document.querySelector(`#${id}`).value = student ? student.scores[index] : 0);
-  updatePreview();
-});
-
-function escapeHtml(value) { const element = document.createElement("div"); element.textContent = value; return element.innerHTML; }
-function showToast(message) { const toast = document.querySelector("#toast"); toast.textContent = message; toast.classList.add("show"); clearTimeout(showToast.timer); showToast.timer = setTimeout(() => toast.classList.remove("show"), 2600); }
-
-TOPICS.forEach(id => document.querySelector(`#${id}`).addEventListener("input", updatePreview));
-searchInput.addEventListener("input", render);
-topTenToggle.addEventListener("change", render);
-body.addEventListener("keydown", event => {
-  if (!event.target.closest(".editing-row")) return;
-  if (event.key === "Escape") { inlineEditingId = null; render(); }
-  if (event.key === "Enter") { event.preventDefault(); event.target.closest("tr").querySelector("[data-save]").click(); }
-});
-updatePreview();
-render();
+if (pageType === "admin") initializeAdminPage();
+else initializeStudentPage();

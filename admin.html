@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#07152f">
+  <title>GeoQuest Lecturer Admin | DCG10263</title>
+  <meta name="description" content="Lecturer score administration for GeoQuest DCG10263 Basic Surveying.">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body data-page="admin" class="admin-page locked">
+  <div class="ambient ambient-one"></div>
+  <div class="ambient ambient-two"></div>
+
+  <div id="pinGate" class="pin-gate">
+    <form id="pinForm" class="pin-card panel" autocomplete="off">
+      <div class="login-emblem" aria-hidden="true">⌖</div>
+      <p class="eyebrow"><span class="signal"></span> RESTRICTED TERMINAL</p>
+      <h1>Lecturer <span>Access</span></h1>
+      <p class="login-copy">Enter your lecturer PIN to access score controls.</p>
+      <label class="field"><span>Lecturer PIN</span><input id="pinInput" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="10" required autofocus aria-describedby="pinError"></label>
+      <p id="pinError" class="pin-error" role="alert"></p>
+      <button class="primary-btn login-btn" type="submit">Unlock admin terminal</button>
+      <a class="back-link" href="index.html">← Return to student leaderboard</a>
+    </form>
+  </div>
+
+  <main id="adminApp" class="app-shell admin-app" aria-hidden="true">
+    <header class="hero panel admin-hero">
+      <div class="hero-content">
+        <div class="course-flag"><span class="signal"></span><span>Diploma in Geomatics</span><i>Lecturer Administration</i></div>
+        <p class="eyebrow">DCG10263 · BASIC SURVEYING</p>
+        <h1>GeoQuest <span>Score Control</span></h1>
+        <p class="hero-copy">Manage DGU1B assessment scores from one secure terminal.</p>
+      </div>
+      <div class="admin-header-actions"><span class="access-status"><i></i> AUTHENTICATED</span><button id="logoutButton" class="ghost-btn" type="button">Logout</button></div>
+    </header>
+
+    <div class="telemetry" aria-hidden="true"><span>ACCESS: LECTURER</span><span>CLASS: DGU1B</span><span>STATUS: <b>ONLINE</b></span><span>MODULES: 05</span></div>
+
+    <section class="stats-grid" aria-label="Class summary">
+      <article class="stat-card panel"><span class="stat-index">01</span><span class="stat-icon">◉</span><div><p>Active Students</p><strong id="studentCount">0</strong><small>DGU1B roster</small></div></article>
+      <article class="stat-card panel"><span class="stat-index">02</span><span class="stat-icon">◆</span><div><p>Class Average</p><strong id="classAverage">0%</strong><small>overall accuracy</small></div></article>
+      <article class="stat-card panel"><span class="stat-index">03</span><span class="stat-icon">▲</span><div><p>Highest Score</p><strong id="topScore">0</strong><small>top performance</small></div></article>
+      <article class="stat-card panel"><span class="stat-index">04</span><span class="stat-icon">⬡</span><div><p>Mission Modules</p><strong>5</strong><small>course topics</small></div></article>
+    </section>
+
+    <section class="panel score-entry">
+      <div class="section-heading">
+        <div><p class="eyebrow">SCORE TERMINAL</p><h2>Update student score</h2></div>
+        <a class="ghost-btn button-link" href="index.html">View leaderboard</a>
+      </div>
+      <form id="scoreForm">
+        <div class="form-grid">
+          <label class="field student-field"><span>Student name</span><select id="studentName" required><option value="">Select a student</option></select></label>
+          <label class="field"><span>Introduction to Surveying</span><input class="score-input" id="topic1" type="number" min="0" max="20" value="0" required><small>/ 20</small></label>
+          <label class="field"><span>Survey Equipment</span><input class="score-input" id="topic2" type="number" min="0" max="20" value="0" required><small>/ 20</small></label>
+          <label class="field"><span>Datum and Coordinates</span><input class="score-input" id="topic3" type="number" min="0" max="20" value="0" required><small>/ 20</small></label>
+          <label class="field"><span>Traverse</span><input class="score-input" id="topic4" type="number" min="0" max="20" value="0" required><small>/ 20</small></label>
+          <label class="field"><span>Land and Survey Agencies</span><input class="score-input" id="topic5" type="number" min="0" max="20" value="0" required><small>/ 20</small></label>
+        </div>
+        <div class="form-footer admin-form-footer">
+          <div class="live-total"><span>Projected total</span><strong><span id="previewTotal">0</span> / 100</strong><div class="mini-track"><i id="previewBar"></i></div></div>
+          <div class="admin-buttons"><button class="danger-btn" id="resetSelected" type="button">Reset selected student</button><button class="danger-btn danger-all" id="resetAll" type="button">Reset all scores</button><button class="primary-btn" id="submitButton" type="submit">Update score</button></div>
+        </div>
+      </form>
+    </section>
+
+    <section class="leaderboard-section panel admin-roster">
+      <div class="section-heading board-tools"><div><p class="eyebrow">LIVE DATA</p><h2>Current class standings</h2></div><label class="search"><span aria-hidden="true">⌕</span><input id="searchInput" type="search" placeholder="Search student" aria-label="Search student"></label></div>
+      <div class="table-wrap"><table><thead><tr><th>Rank</th><th>Student</th><th>Intro</th><th>Equipment</th><th>Datum</th><th>Traverse</th><th>Agencies</th><th>Progress</th><th>Total</th><th>Badge</th></tr></thead><tbody id="leaderboardBody"></tbody></table><p id="emptyState" class="empty-state" hidden>No students match your search.</p></div>
+    </section>
+
+    <footer><p>GeoQuest · Lecturer Administration</p><span>Scores are saved on this device</span></footer>
+  </main>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script src="script.js"></script>
+</body>
+</html>
